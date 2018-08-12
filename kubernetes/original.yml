@@ -1,0 +1,370 @@
+# apiVersion: extensions/v1beta1
+# kind: Deployment
+# metadata:
+#   name: wordpress
+#   labels:
+#     app: wordpress
+# spec:
+#   replicas: 1 
+#   selector:
+#     matchLabels:
+#       app: wordpress
+#   template:
+#     metadata:
+#       labels:
+#         app: wordpress
+#     spec:
+#       containers:
+#         - image: jjswain2018/nginx-php-wordpress:v20
+#           name: wordpress
+#         #  command: ['sh', '-c', 'wp --allow-root core install  --url=35.225.205.52 --title=DEVOPS --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com']
+#         #   command: [ "/bin/bash", "-c", "--" ]
+#         #   args: [ "while true; do sleep 30; done;" ]
+#           env:
+#           - name: MYSQL_DB_HOST
+#             value: mysql-connect 
+#           - name: WORDPRESS_DB_PASSWORD
+#             valueFrom:
+#               secretKeyRef:
+#                 name: mysql-pass 
+#                 key:  password
+#           ports:
+#             - containerPort: 80
+#               name: wordpress
+          
+#           volumeMounts:
+#           - name: wordpress-persistent-storage
+#              # mountPath: /var/www/html
+#             mountPath: /usr/share/nginx/wwww 
+#       volumes:
+#         - name: wordpress-persistent-storage
+#           persistentVolumeClaim:
+#             claimName: wordpress-volumeclaim
+#       initContainers:
+#       - name: install
+#         image: jjswain2018/nginx-php-wordpress:v20
+#         command: ["/bin/bash", "-c",
+#                  "cp -rf * /usr/share/nginx/html",
+#                   "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+#         env:
+#           - name: MYSQL_DB_HOST
+#             value: mysql-connect 
+#           - name: WORDPRESS_DB_PASSWORD
+#             valueFrom:
+#               secretKeyRef:
+#                 name: mysql-pass 
+#                 key:  password
+#         # command: ["/bin/bash", "-c",
+#         #          "cp -rf * /usr/share/nginx/html",
+#         #           "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+#         volumeMounts:
+#          - name: wordpress-persistent-storage
+#            mountPath: "/usr/share/nginx/html"
+#       dnsPolicy: Default
+#       volumes:
+#       - name: wordpress-persistent-storage
+#         persistentVolumeClaim:
+#             claimName: wordpress-volumeclaim
+#       # volumes:
+#       # - name: wordpress-persistent-storage
+#       #   persistentVolumeClaim:
+#       #       claimName: wordpress-volumeclaim
+#         #lifecycle:
+#         #     postStart:
+#         #       exec:              
+#         #         command: ["/bin/bash", "-c","cd /usr/share/nginx/www","cp /usr/share/nginx/www /home/janmejaya_swain/mnt/data", "wp --allow-root core install  --url=testwp.com  --title=DEVOPS --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+
+# #=======================================================================================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-volumeclaim
+  labels:
+    app: mysql
+spec:
+  #storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-connect 
+  labels:
+    app: mysql
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+  selector:
+    app: mysql
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mysql-connect
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - image: mysql:5.6
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key:  password 
+          ports:
+            - containerPort: 3306
+              name: mysql
+          readinessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 15
+            periodSeconds: 20 
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+           #   mountPath: /usr/share/nginx/www
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+             claimName: mysql-volumeclaim
+#---
+# kind: PersistentVolume
+# apiVersion: v1
+# metadata:
+#   name: task-pv-volume
+#   labels:
+#     type: local
+# spec:
+#   storageClassName: manual
+#   capacity:
+#     storage: 10Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   hostPath:
+#     path: "/home/janmejaya_swain/mnt/data"
+# ---
+---    
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-volumeclaim 
+  labels:
+    app: wordpress
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Deployment
+# metadata:
+#   name: wordpress
+#   labels:
+#     app: wordpress
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: wordpress
+#   template:
+#     metadata:
+#       labels:
+#         app: wordpress
+#     spec:
+#       containers:
+#         - image: jjswain2018/nginx-php-wordpress:v20
+#           name:  wordpress
+#           env:
+#           - name: MYSQL_DB_HOST
+#             value: mysql-connect 
+#           - name: WORDPRESS_DB_PASSWORD
+#             valueFrom:
+#               secretKeyRef:
+#                 name: mysql-pass 
+#                 key:  password
+#           ports:
+#             - containerPort: 80
+#               name: wordpress
+#           volumeMounts:
+#           - name: wordpress-persistent-storage
+#               # mountPath: /var/www/html
+#             mountPath: /usr/share/nginx/www 
+#       volumes:
+#         - name: wordpress-persistent-storage
+#           persistentVolumeClaim:
+#               claimName: wordpress-volumeclaim
+#       initContainers:
+#       - name: copy 
+#         image: jjswain2018/nginx-php-wordpress:v20
+#           command: ["/bin/bash", "-c",
+#                  "cp -rf * /usr/share/nginx/html", 
+#                  "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+#         env:
+#           - name: MYSQL_DB_HOST
+#             value: mysql-connect 
+#           - name: WORDPRESS_DB_PASSWORD
+#             valueFrom:
+#               secretKeyRef:
+#                 name: mysql-pass 
+#                 key:  password
+#         ports:
+#           - containerPort: 80
+#             name: wordpress
+#         volumeMounts:
+#         - name: wordpress-persistent-storage
+#           mountPath: /usr/share/nginx/html
+#       dnsPolicy: Default
+#       volumes:
+#       - name: wordpress-persistent-storage
+#         persistentVolumeClaim:
+#            claimName: wordpress-volumeclaim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: wordpress
+  name: wordpress
+spec:
+  type: LoadBalancer #ClusterIP # LoadBalancer
+  ports:
+    - port:  80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: wordpress
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - image: jjswain2018/nginx-php-wordpress:v01
+          name: wordpress
+        #  command: ['sh', '-c', 'wp --allow-root core install  --url=35.225.205.52 --title=DEVOPS --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com']
+        #   command: [ "/bin/bash", "-c", "--" ]
+        #   args: [ "while true; do sleep 30; done;" ]
+          env:
+          - name: TEST
+            value: testwp.com
+          - name: DEVOPS
+            value: OH_MY_GOD_BLESS
+          - name: USER
+            value: user1
+          - name: EMAIL
+            value: devops@gmail.com
+          - name: PASSWORD
+            value: password
+          - name: MYSQL_DB_HOST
+            value: mysql-connect 
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-pass 
+                key:  password
+          ports:
+            - containerPort: 80
+              name: wordpress
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20 
+          volumeMounts:
+          - name: wordpress-persistent-storage
+             # mountPath: /var/www/html
+            mountPath: /usr/share/nginx/wwww 
+      volumes:
+        - name: wordpress-persistent-storage
+          persistentVolumeClaim:
+            claimName: wordpress-volumeclaim
+      # initContainers:
+      # - name: install
+      #   image: jjswain2018/nginx-php-wordpress:v20
+      #   command: ["/bin/bash", "-c",
+      #            "cp -rf * /usr/share/nginx/html"]
+      #           #  "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+      #   env:
+      #     - name: MYSQL_DB_HOST
+      #       value: mysql-connect 
+      #     - name: WORDPRESS_DB_PASSWORD
+      #       valueFrom:
+      #         secretKeyRef:
+      #           name: mysql-pass 
+      #           key:  password
+      #   # command: ["/bin/bash", "-c",
+      #   #          "cp -rf * /usr/share/nginx/html",
+      #   #           "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+      #   volumeMounts:
+      #    - name: wordpress-persistent-storage
+      #      mountPath: "/usr/share/nginx/html"
+      # - name: installation 
+      #   image: jjswain2018/nginx-php-wordpress:v20
+      #   env:
+      #     - name: MYSQL_DB_HOST
+      #       value: mysql-connect 
+      #     - name: WORDPRESS_DB_PASSWORD
+      #       valueFrom:
+      #         secretKeyRef:
+      #           name: mysql-pass 
+      #           key:  password
+      #   command: ["/bin/bash", "-c", "sleep 10s",
+      #             "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]        
+      # dnsPolicy: Default
+      # volumes:
+      # - name: wordpress-persistent-storage
+      #   persistentVolumeClaim:
+      #       claimName: wordpress-volumeclaim
+      # # volumes:
+      # - name: wordpress-persistent-storage
+      #   persistentVolumeClaim:
+      #       claimName: wordpress-volumeclaim
+        #lifecycle:
+        #     postStart:
+        #       exec:              
+        #         command: ["/bin/bash", "-c","cd /usr/share/nginx/www","cp /usr/share/nginx/www /home/janmejaya_swain/mnt/data", "wp --allow-root core install  --url=testwp.com  --title=DEVOPS --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+
+
+
