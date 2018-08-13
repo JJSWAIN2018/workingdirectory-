@@ -75,7 +75,14 @@
 #         #         command: ["/bin/bash", "-c","cd /usr/share/nginx/www","cp /usr/share/nginx/www /home/janmejaya_swain/mnt/data", "wp --allow-root core install  --url=testwp.com  --title=DEVOPS --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
 
 # #=======================================================================================================================================
-
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-pass 
+type: Opaque
+data:
+  password: cGFzc3dvcmQ=
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -173,7 +180,7 @@ metadata:
   labels:
     app: wordpress
 spec:
-  storageClassName: manual
+  #storageClassName: manual
   accessModes:
     - ReadWriteOnce
   resources:
@@ -276,16 +283,16 @@ spec:
         app: wordpress
     spec:
       containers:
-        - image: jjswain2018/nginx-php-wordpress:v01
+        - image: jjswain2018/nginx-php-wordpress:v003
           name: wordpress
         #  command: ['sh', '-c', 'wp --allow-root core install  --url=35.225.205.52 --title=DEVOPS --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com']
         #   command: [ "/bin/bash", "-c", "--" ]
         #   args: [ "while true; do sleep 30; done;" ]
           env:
           - name: TEST
-            value: testwp.com
+            value: testwisdm.com
           - name: DEVOPS
-            value: OH_MY_GOD_BLESS
+            value: OH_MY_GOD_BLESS_WISDMLABS
           - name: USER
             value: user1
           - name: EMAIL
@@ -316,32 +323,27 @@ spec:
           - name: wordpress-persistent-storage
              # mountPath: /var/www/html
             mountPath: /usr/share/nginx/wwww 
-      volumes:
+      initContainers:
+      - name: install
+        image: jjswain2018/nginx-php-wordpress:v003
+        command: ["/bin/bash", "-c",
+                 "cp -rf * /usr/share/nginx/html"]
+        env:
+          - name: MYSQL_DB_HOST
+            value: mysql-connect 
+          - name: WORDPRESS_DB_PASSWORD 
+            valueFrom:
+              secretKeyRef:
+                name: mysql-pass 
+                key:  password
+        # command: ["/bin/bash", "-c",
+        #          "cp -rf * /usr/share/nginx/html",
+        #           "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
+        volumeMounts:
         - name: wordpress-persistent-storage
-          persistentVolumeClaim:
-            claimName: wordpress-volumeclaim
-      # initContainers:
-      # - name: install
-      #   image: jjswain2018/nginx-php-wordpress:v20
-      #   command: ["/bin/bash", "-c",
-      #            "cp -rf * /usr/share/nginx/html"]
-      #           #  "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
-      #   env:
-      #     - name: MYSQL_DB_HOST
-      #       value: mysql-connect 
-      #     - name: WORDPRESS_DB_PASSWORD
-      #       valueFrom:
-      #         secretKeyRef:
-      #           name: mysql-pass 
-      #           key:  password
-      #   # command: ["/bin/bash", "-c",
-      #   #          "cp -rf * /usr/share/nginx/html",
-      #   #           "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]
-      #   volumeMounts:
-      #    - name: wordpress-persistent-storage
-      #      mountPath: "/usr/share/nginx/html"
+          mountPath: "/usr/share/nginx/html"
       # - name: installation 
-      #   image: jjswain2018/nginx-php-wordpress:v20
+      #   image: jjswain2018/nginx-php-wordpress:v003
       #   env:
       #     - name: MYSQL_DB_HOST
       #       value: mysql-connect 
@@ -353,10 +355,10 @@ spec:
       #   command: ["/bin/bash", "-c", "sleep 10s",
       #             "wp --allow-root core install  --url=testwp.com --title=DEVOPS-Wisdm --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com"]        
       # dnsPolicy: Default
-      # volumes:
-      # - name: wordpress-persistent-storage
-      #   persistentVolumeClaim:
-      #       claimName: wordpress-volumeclaim
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+            claimName: wordpress-volumeclaim
       # # volumes:
       # - name: wordpress-persistent-storage
       #   persistentVolumeClaim:
