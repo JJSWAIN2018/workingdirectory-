@@ -1,0 +1,136 @@
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: mysql-pass 
+# type: Opaque
+# data:
+#   password: cGFzc3dvcmQ=
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   labels:
+#     type: local
+#   name: mysql-local-backup-volume
+# spec:
+#   accessModes:
+#   - ReadWriteMany
+#   capacity:
+#     storage: 5Gi
+#   hostPath:
+#     path: /tmp
+#   persistentVolumeReclaimPolicy: Recycle
+#   storageClassName: manual
+# ---
+# apiVersion: mysql.oracle.com/v1alpha1
+# kind: Cluster
+# metadata:
+#   name: mysql-cluster
+# spec:
+#   members: 1
+#   rootPasswordSecret:
+#     name: mysql-pass
+#   volumeClaimTemplate:
+#     metadata:
+#       name: data
+#     spec:
+#       storageClassName: manual
+#       accessModes:
+#         - ReadWriteMany
+#       resources:
+#         requests:
+#           storage: 1Gi
+# ---
+# apiVersion: mysql.oracle.com/v1alpha1
+# kind: Backup
+# metadata:
+#   name: mysql-backup
+# spec:
+#   executor:
+#     mysqldump:
+#       databases:
+#         - name: mysql
+#        # - name: wordpress
+#   storageProvider:
+#     s3:
+#       endpoint: https://console.cloud.google.com/storage/browser/new-wisdm #storage.googleapis.com
+#       region: US-WEST1
+#       bucket: new-wisdm 
+#       forcePathStyle: true
+#       credentialsSecret:
+#           name: s3-credentials
+#   cluster:
+#     name: mysql-cluster
+# ---
+# apiVersion: mysql.oracle.com/v1alpha1
+# kind: BackupSchedule
+# metadata:
+#   name: mysql-backup-schedule
+# spec:
+#   schedule: '*/2 * * * *'
+#   backupTemplate:
+#     executor:
+#      mysqldump:
+#       databases:
+#         - mysql
+#     storageProvider:
+#       s3:
+#         endpoint: storage.googleapis.com
+#         region:  us-central1
+#         bucket: new-wisdm
+#         #forcePathStyle: true 
+#       credentialsSecret:
+#         name: s3-credentials
+#     cluster:
+#       name: mysql-cluster
+#---      
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Backup
+metadata:
+  name: mysql-backup
+spec:
+  executor:
+    mysqldump:
+      databases:
+        - name: mysql 
+          valueFrom:
+              secretKeyRef:
+                 name: mysql-pass 
+                 key:  password
+  storageProvider:
+    s3:
+      endpoint: storage.googleapis.com 
+      region: us-west2
+      bucket: test-back-wisdm
+      #forcePathStyle: true
+      credentialsSecret:
+          name: s3-credentials
+  cluster:
+    name: mysql-cluster
+# ---
+# apiVersion: mysql.oracle.com/v1alpha1
+# kind: BackupSchedule
+# metadata:
+#   name: mysql-backup-schedule
+#  # namespace: mysql-operator 
+# spec:
+#   schedule: "*/2 * * * *"
+#   backupTemplate:
+#     executor:
+#       mysqldump:
+#         databases:
+#           - name: mysql
+#             valueFrom:
+#                secretKeyRef:
+#                   name: mysql-pass 
+#                   key:  password
+            
+#     storageProvider:
+#       s3:
+#         endpoint: storage.googleapis.com
+#         region: us-west2 # us
+#         bucket: test-wisdm  # new-bucket11
+#         credentialsSecret:
+#           name: s3-credentials
+#     cluster:
+#       name: mysql-cluster
