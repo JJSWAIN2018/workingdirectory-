@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-agent
+#  namespace: mysql-operator 
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: mysql-agent
+#  namespace: mysql-operator 
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mysql-agent
+subjects:
+- kind: ServiceAccount
+  name: mysql-agent
+#  namespace: mysql-operator
+#---
+#apiVersion: mysql.oracle.com/v1alpha1
+#kind: Cluster
+#metadata:
+#  name: mysql-agent #my-app-db
+#  namespace: my-namespace
