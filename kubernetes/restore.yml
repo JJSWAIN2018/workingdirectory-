@@ -1,0 +1,63 @@
+# # apiVersion: mysql.oracle.com/v1alpha1
+# # kind: Restore
+# # metadata:
+# #   name: mysql-restore
+# # spec:
+# #   executor:
+# #     mysqldump:
+# #       databases:
+# #         - name: mysql 
+# #           valueFrom:
+# #               secretKeyRef:
+# #                  name: mysql-pass 
+# #                  key:  password
+# #   storageProvider:
+# #     s3:
+# #       endpoint: storage.googleapis.com 
+# #       region: us-west2
+# #       bucket: test-back-wisdm
+# #       #forcePathStyle: true
+# #       credentialsSecret:
+# #           name: s3-credentials
+# #   cluster:
+# #     name: mysql-cluster
+# #   backupRef:
+# #     name: mysql
+
+# apiVersion: mysql.oracle.com/v1alpha1
+# kind: Restore
+# metadata:
+#   name: example-restore
+# spec:
+#   cluster:
+#     name: mysql-cluster 
+#   backup:
+#   - name: storageProvider
+#     value: S3
+#   - name: endpoint
+#     value: storage.googleapis.com
+#   - name: region
+#     value: us-west2
+#   - name: bucket 
+#     value: test-back-wisdm   
+#   - name: backupRef
+#     value: mysql-cluster-mysql-backup.20180823124947.sql.gz
+#     credentialsSecret:
+#            name: s3-credentials
+#     # s3:
+#     #   endpoint: storage.googleapis.com 
+#     #   region: us-west2
+#     #   bucket: test-back-wisdm
+#     #   name: mysql-cluster-mysql-backup.20180823124947.sql.gz
+#     #   #forcePathStyle: true
+#     #   credentialsSecret:
+#     #       name: s3-credentials
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Restore
+metadata:
+  name: mysql-restore
+spec:
+  cluster:
+     name: mysql-cluster
+  backup:
+     name: mysql-backup 

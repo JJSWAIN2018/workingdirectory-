@@ -11,6 +11,51 @@ type: Opaque
 data:
   password: cGFzc3dvcmQ=
 ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   labels:
+#     type: local
+#   name: mysql-local-backup-volume
+# spec:
+#   accessModes:
+#   - ReadWriteMany
+#   capacity:
+#     storage: 5Gi
+#   hostPath:
+#     path: /home/janmejaya_swain/data
+#   persistentVolumeReclaimPolicy: Recycle
+#   storageClassName: manual
+# ---
+# apiVersion: mysql.oracle.com/v1alpha1
+# kind: Cluster
+# metadata:
+#   name: mysql-cluster
+# spec:
+#   members: 1
+#   rootPasswordSecret:
+#     name: mysql-pass
+#   volumeClaimTemplate:
+#     metadata:
+#       name: data
+#     spec:
+#       storageClassName: manual
+#       accessModes:
+#         - ReadWriteMany
+#       resources:
+#         requests:
+#           storage: 1Gi
+#   # backupVolumeClaimTemplate:
+#   #   metadata:
+#   #     name: backup-data
+#   #   spec:
+#   #     storageClassName: manual
+#   #     accessModes:
+#   #       - ReadWriteMany
+#   #     resources:
+#   #       requests:
+#   #         storage: 1Gi
+# ---
 apiVersion: mysql.oracle.com/v1alpha1
 kind: Cluster
 metadata:
@@ -66,7 +111,7 @@ spec:
         app: wordpress
     spec:
       containers:
-        - image: jjswain2018/wisdmlabs-nginx-php7.2-wordpress:v02
+        - image: jjswain2018/wisdmlabs-nginx-php7.2-wordpress:v04
           name: wordpress
           env:
           - name: URL
@@ -86,6 +131,8 @@ spec:
               secretKeyRef:
                 name: mysql-pass 
                 key:  password
+          # - name: REDIS_HOST
+          #   value: redis-connect       
           ports:
             - containerPort: 80
               name: wordpress
@@ -102,10 +149,10 @@ spec:
           volumeMounts:
           - name: wordpress-persistent-storage
              # mountPath: /var/www/html
-            mountPath: /usr/share/nginx/wwww 
+            mountPath: /usr/share/nginx/www 
       initContainers:
       - name: install
-        image: jjswain2018/wisdmlabs-nginx-php7.2-wordpress:v02
+        image: jjswain2018/wisdmlabs-nginx-php7.2-wordpress:v04
         command: ["/bin/bash", "-c",
                  "cp -rf * /usr/share/nginx/html"]
         env:
@@ -126,3 +173,70 @@ spec:
       - name: wordpress-persistent-storage
         persistentVolumeClaim:
             claimName: wordpress-volumeclaim
+      # volumes:
+      # - name: wordpress-persistent-storage
+      #   persistentVolumeClaim:
+      #       claimName: stash-recovered
+        
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: redis-connect 
+#   labels:
+#     app: redis
+# spec:
+#   type: ClusterIP
+#   ports:
+#     - port: 6379
+#   selector:
+#     app: redis
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Deployment
+# metadata:
+#   name: redis-connect
+#   labels:
+#     app: redis
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: redis
+#   template:
+#     metadata:
+#       labels:
+#         app: redis
+#     spec:
+#       containers:
+#         - image: bitnami/redis:4.0.11
+#           name: redis
+#           env:
+#           - name: ALLOW_EMPTY_PASSWORD
+#             value: "yes" 
+#             # - name: MYSQL_ROOT_PASSWORD
+#             #   valueFrom:
+#             #     secretKeyRef:
+#             #       name: mysql-pass
+#             #       key:  password 
+#           ports:
+#             - containerPort: 6379
+#               name: redis
+#           readinessProbe:
+#             tcpSocket:
+#               port: 6379
+#             initialDelaySeconds: 50
+#             periodSeconds: 100
+#           livenessProbe:
+#             tcpSocket:
+#               port: 6379
+#             initialDelaySeconds: 150
+#             periodSeconds: 200 
+#       #     volumeMounts:
+#       #       - name: mysql-persistent-storage
+#       #         mountPath: /var/lib/mysql
+#       #      #   mountPath: /usr/share/nginx/www
+#       # volumes:
+#       #   - name: mysql-persistent-storage
+#       #     persistentVolumeClaim:
+#       #        claimName: mysql-volumeclaim

@@ -283,16 +283,16 @@ spec:
         app: wordpress
     spec:
       containers:
-        - image: jjswain2018/nginx-php-wordpress:v003
+        - image: jjswain2018/wisdmlabs-nginx-php7.0-wordpress:v03
           name: wordpress
         #  command: ['sh', '-c', 'wp --allow-root core install  --url=35.225.205.52 --title=DEVOPS --admin_user=anyuser --admin_password=password --admin_email=devops@gmail.com']
         #   command: [ "/bin/bash", "-c", "--" ]
         #   args: [ "while true; do sleep 30; done;" ]
           env:
-          - name: TEST
+          - name: URL
             value: testwisdm.com
-          - name: DEVOPS
-            value: OH_MY_GOD_BLESS_WISDMLABS
+          - name: TITLE
+            value: OH_MY_GOD_BLESS_WISDMLABS_PHP7
           - name: USER
             value: user1
           - name: EMAIL
@@ -325,7 +325,7 @@ spec:
             mountPath: /usr/share/nginx/wwww 
       initContainers:
       - name: install
-        image: jjswain2018/nginx-php-wordpress:v003
+        image: jjswain2018/wisdmlabs-nginx-php7.0-wordpress:v03
         command: ["/bin/bash", "-c",
                  "cp -rf * /usr/share/nginx/html"]
         env:

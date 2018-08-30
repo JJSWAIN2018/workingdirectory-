@@ -1,0 +1,54 @@
+# apiVersion: stash.appscode.com/v1alpha1
+# kind: Restic
+# metadata:
+#  name: gcs-restic
+#  namespace: default
+# spec:
+#  selector:
+#    matchLabels:
+#      app: wordpress #stash-demo
+#  fileGroups:
+#  - path: /usr/share/nginx/www/wp-content    #  /source/data
+#    retentionPolicyName: 'keep-last-5'
+#  backend:
+#    gcs:
+#      bucket: test-wpbackup-wisdm
+#      prefix: test
+#    storageSecretName: gcs-secret1
+#  schedule: '@every 3m'
+#  volumeMounts:
+#  - mountPath: /usr/share/nginx/www/wp-content  #/source/data
+#    name: wordpress-persistent-storage
+#  retentionPolicies:
+#  - name: 'keep-last-5'
+#    keepLast: 5
+#    prune: true
+#---   
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: stash-recovered
+ labels:
+   app: wordpress
+spec:
+ accessModes:
+ - ReadWriteOnce
+ resources:
+   requests:
+     storage: 2Gi
+---
+apiVersion: stash.appscode.com/v1alpha1
+kind: Recovery
+metadata:
+ name: gcs-recovery
+ namespace: default
+spec:
+ repository:
+   name: deployment.wordpress
+   namespace: default
+ paths:
+ - /usr/share/nginx/www/wp-content
+ recoveredVolumes:
+ - mountPath: /usr/share/nginx/www/wp-content
+   persistentVolumeClaim:
+     claimName: stash-recovered

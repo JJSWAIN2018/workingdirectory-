@@ -101,7 +101,7 @@ spec:
     s3:
       endpoint: storage.googleapis.com 
       region: us-west2
-      bucket: test-back-wisdm
+      bucket: test-dbbackup-wisdm
       #forcePathStyle: true
       credentialsSecret:
           name: s3-credentials

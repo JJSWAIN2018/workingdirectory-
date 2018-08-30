@@ -1,26 +1,53 @@
+# apiVersion: stash.appscode.com/v1alpha1
+# kind: Restic
+# metadata:
+#   name: restic-wordpress
+#   namespace: default
+# spec:
+#   selector:
+#     matchLabels:
+#       app: wordpress
+#   fileGroups:
+#   - path: /usr/share/nginx/www
+#     retentionPolicyName: 'keep-last-5'
+#   backend:
+#     gcs:
+#       bucket: test-wpbackup-wisdm
+#       prefix: demo
+#     storageSecretName: gcs-secret
+#   schedule: '@every 3m'
+#   paused: false 
+#   volumeMounts:
+#   - mountPath: /usr/share/nginx/www
+#     name: wordpress-persistent-storage
+#   retentionPolicies:
+#   - name: 'keep-last-5'
+#     keepLast: 5
+#     prune: true
+---
 apiVersion: stash.appscode.com/v1alpha1
 kind: Restic
 metadata:
-  name: restic-wordpress
-  namespace: default
+ name: restic-wordpress 
+ namespace: default
 spec:
-  selector:
-    matchLabels:
-      app: wordpress
-  fileGroups:
-  - path: /usr/share/nginx/www
-    retentionPolicyName: 'keep-last-5'
-  backend:
-    gcs:
-      bucket: godbless
-      prefix: demo
-    storageSecretName: gcs-secret
-  schedule: '@every 1m'
-  paused: true
-  volumeMounts:
-  - mountPath: /usr/share/nginx/www
-    name: wordpress-persistent-storage
-  retentionPolicies:
-  - name: 'keep-last-5'
-    keepLast: 5
-    prune: true
+ selector:
+   matchLabels:
+     app: wordpress #stash-demo
+ fileGroups:
+ - path: /usr/share/nginx/www/wp-content    #  /source/data
+   retentionPolicyName: 'keep-last-5'
+ backend:
+   gcs:
+     bucket: test-wpbackup-wisdm
+     prefix: test
+   storageSecretName: gcs-secret
+ schedule: '@every 300m'
+ paused: false 
+ volumeMounts:
+ - mountPath: /usr/share/nginx/www/wp-content  #/source/data
+   name: wordpress-persistent-storage
+ retentionPolicies:
+ - name: 'keep-last-5'
+   keepLast: 5
+   prune: true
