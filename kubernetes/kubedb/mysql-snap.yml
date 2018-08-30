@@ -1,0 +1,12 @@
+apiVersion: kubedb.com/v1alpha1
+kind: Snapshot
+metadata:
+  name: snap-mysql
+  namespace: demo
+  labels:
+    kubedb.com/kind: MySQL
+spec:
+  databaseName: mysql-quickstart
+  storageSecretName: my-snap-secret
+  gcs:
+    bucket: test-kubedb-backup
