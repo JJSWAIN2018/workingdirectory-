@@ -8,7 +8,7 @@ if [ ! -f /usr/share/nginx/www/wp-config.php ]; then
   #MYSQL_PASSWORD=`pwgen -c -n -1 12`
   MYSQL_PASSWORD="password" 
   WORDPRESS_USER="root"
-  WORDPRESS_PASSWORD="password"
+  WORDPRESS_PASSWORD="password" 
 
   #WORDPRESS_PASSWORD=`pwgen -c -n -1 12`
   #This is so the passwords show up in logs.
