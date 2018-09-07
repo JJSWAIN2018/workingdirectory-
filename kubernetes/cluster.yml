@@ -150,6 +150,9 @@ spec:
           - name: wordpress-persistent-storage
              # mountPath: /var/www/html
             mountPath: /usr/share/nginx/www 
+          resources:
+            requests:
+              cpu: 200m
       initContainers:
       - name: install
         image: jjswain2018/wisdmlabs-nginx-php7.2-wordpress:v04

@@ -1,0 +1,23 @@
+apiVersion: mysql.oracle.com/v1alpha1
+kind: Backup
+metadata:
+  name: mysql-backup
+spec:
+  executor:
+    mysqldump:
+      databases:
+        - name: mysql 
+          valueFrom:
+              secretKeyRef:
+                 name: mysql-pass 
+                 key:  password
+  storageProvider:
+    s3:
+      endpoint: storage.googleapis.com 
+      region: us-west2
+      bucket: test-mysqlback-wisdm
+      #forcePathStyle: true
+      credentialsSecret:
+          name: s3-credentials
+  cluster:
+    name: mysql-cluster

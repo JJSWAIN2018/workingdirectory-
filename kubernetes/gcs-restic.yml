@@ -42,7 +42,7 @@ spec:
      bucket: test-wpbackup-wisdm
      prefix: test
    storageSecretName: gcs-secret
- schedule: '@every 300m'
+ schedule: '@every 10m'
  paused: false 
  volumeMounts:
  - mountPath: /usr/share/nginx/www/wp-content  #/source/data
